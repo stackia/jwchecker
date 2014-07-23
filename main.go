@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -10,16 +11,18 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"unicode"
 
 	"github.com/qiniu/iconv"
 )
 
 const baseUrl string = "http://222.201.132.113/"
-const defaultStudentNumber string = "<Edit your student number below>"
-const studentNumber string = "<Edit your student number below>"
-const defaultStudentPassword string = "<Edit your student password below>"
-const studentPassword string = "<Edit your student password below>"
-const subjectName string = "概率论"
+
+type StudentInfo struct {
+	Number   string
+	Password string
+	Name     string
+}
 
 func getViewState(s *string) string {
 	reg := regexp.MustCompile("name=\"__VIEWSTATE\" value=\"(.*)\"")
@@ -27,10 +30,45 @@ func getViewState(s *string) string {
 	return match[0][1]
 }
 
-func main() {
-	if studentNumber == defaultStudentNumber || studentPassword == defaultStudentPassword {
-		log.Fatal("请编辑源码修改为自己的学号和密码。")
+func (self *StudentInfo) ScanFromInput() error {
+	fmt.Print("请输入你的学号: ")
+	fmt.Scan(&self.Number)
+	for _, v := range self.Number {
+		if !unicode.IsDigit(v) {
+			return errors.New("学号无效，请重新输入。")
+		}
 	}
+
+	fmt.Print("请输入你的教务系统登录密码: ")
+	fmt.Scan(&self.Password)
+
+	return nil
+}
+
+func main() {
+	var student StudentInfo
+
+	// Input number and password
+	for {
+		err := student.ScanFromInput()
+		if err == nil {
+			break
+		}
+		fmt.Println(err)
+	}
+
+	// Input the subject name to check
+	var subjectName string
+	fmt.Print("请输入要查询的课程名称: ")
+	fmt.Scan(&subjectName)
+
+	// Handle panic
+	defer func() {
+		if err := recover(); err != nil {
+			log.Fatal("发生异常，错误如下:\n", err)
+		}
+	}()
+
 	var lastUrl *url.URL
 	var client *http.Client
 
@@ -61,7 +99,7 @@ func main() {
 	body, _ := ioutil.ReadAll(resp.Body)
 	bodyStr := string(body)
 	viewState := getViewState(&bodyStr)
-	loginFormValues := url.Values{"__VIEWSTATE": {viewState}, "TextBox1": {studentNumber}, "TextBox2": {studentPassword}, "TextBox3": {""}, "Button1": {""}, "lbLanguage": {""}, "RadioButtonList1": {"学生"}}
+	loginFormValues := url.Values{"__VIEWSTATE": {viewState}, "TextBox1": {student.Number}, "TextBox2": {student.Password}, "TextBox3": {""}, "Button1": {""}, "lbLanguage": {""}, "RadioButtonList1": {"学生"}}
 
 	// Do login
 	resp, err = client.PostForm(loginUrl.String(), loginFormValues)
@@ -85,7 +123,7 @@ func main() {
 
 	// Load grade page to get __VIEWSTATE
 	gradeQueryUrl, _ := url.Parse(baseUrl + "(" + loginHash + ")/" + gradeQueryUrlStr)
-	refererUrl, _ := url.Parse(baseUrl + "(" + loginHash + ")/xs_main.aspx?xh=" + studentNumber)
+	refererUrl, _ := url.Parse(baseUrl + "(" + loginHash + ")/xs_main.aspx?xh=" + student.Number)
 	req, _ := http.NewRequest("GET", gradeQueryUrl.String(), bytes.NewBufferString(""))
 	req.Header.Add("Referer", refererUrl.String())
 	resp, err = client.Do(req)
