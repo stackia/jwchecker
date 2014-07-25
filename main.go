@@ -13,7 +13,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/qiniu/iconv"
+	"code.google.com/p/go.net/html/charset"
 )
 
 const baseUrl string = "http://222.201.132.113/"
@@ -116,9 +116,9 @@ func main() {
 		}
 
 		// Get student number and name
-		cd, _ := iconv.Open("utf-8", "gbk")
-		body, _ = ioutil.ReadAll(resp.Body)
-		lastBodyContent = cd.ConvString(string(body))
+		bodyUTF8Reader, _ := charset.NewReader(resp.Body, "text/html")
+		body, _ = ioutil.ReadAll(bodyUTF8Reader)
+		lastBodyContent = string(body)
 		reg = regexp.MustCompile("\\<span id=\"xhxm\"\\>(\\d*)  (.*)同学\\<\\/span\\>")
 		match = reg.FindAllStringSubmatch(lastBodyContent, 1)
 		if len(match) == 0 {
@@ -173,9 +173,9 @@ func main() {
 		panic(err)
 	}
 
-	cd, _ := iconv.Open("utf-8", "gbk")
-	body, _ = ioutil.ReadAll(resp.Body)
-	lastBodyContent = cd.ConvString(string(body))
+	bodyUTF8Reader, _ := charset.NewReader(resp.Body, "text/html")
+	body, _ = ioutil.ReadAll(bodyUTF8Reader)
+	lastBodyContent = string(body)
 
 	count := strings.Count(lastBodyContent, subjectName)
 	if count > 0 {
