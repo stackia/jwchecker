@@ -1,5 +1,7 @@
 # 华工教务系统成绩检测器 JWChecker
 
+[![Gobuild Download](http://gobuild.io/badge/github.com/stackia/jwchecker/download.png)](http://gobuild.io/github.com/stackia/jwchecker)
+
 这个小工具可以自动访问[华南理工大学教务系统](http://www.scut.edu.cn/jw2005)，查询指定科目的成绩是否已公布。
 
 这是 Go 语言实现的版本。
