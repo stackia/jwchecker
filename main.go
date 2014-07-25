@@ -34,7 +34,7 @@ func (self *StudentInfo) ScanFromInput() {
 OUTER:
 	for {
 		fmt.Print("请输入你的学号: ")
-		fmt.Scan(&self.Number)
+		fmt.Scanln(&self.Number)
 		for _, v := range self.Number {
 			if !unicode.IsDigit(v) {
 				fmt.Println("学号无效，请重新输入。")
@@ -43,7 +43,7 @@ OUTER:
 		}
 
 		fmt.Print("请输入你的教务系统登录密码: ")
-		fmt.Scan(&self.Password)
+		fmt.Scanln(&self.Password)
 		break
 	}
 
@@ -58,7 +58,7 @@ func main() {
 	// Input the subject name to check
 	var subjectName string
 	fmt.Print("请输入要查询的课程名称: ")
-	fmt.Scan(&subjectName)
+	fmt.Scanln(&subjectName)
 
 	log.Println("开始尝试...")
 
@@ -72,7 +72,7 @@ func main() {
 			log.Println("发生异常，错误如下:\n", err)
 			fmt.Println("输出调试信息？(y/n)")
 			var choice string
-			if fmt.Scan(&choice); choice == "y" {
+			if fmt.Scanln(&choice); choice == "y" {
 				fmt.Println(lastBodyContent)
 			}
 			os.Exit(1)
